@@ -22,7 +22,7 @@ class Localbranchclean {
     $dry_run = isset($options['dry-run']);
     $force = isset($options['force']);
 
-    foreach ($this->_get_project_list($options) as $project) {
+    foreach ($this->get_project_list($options) as $project) {
       printf(hl('%s', 'lightcyan', 'underline') . "\n", $project->name);
       chdir($project->get_dir());
       $local_branches = $project->get_branches();
