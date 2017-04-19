@@ -13,7 +13,7 @@ class Bc {
       return;
     }
 
-    $maxw = gp()->app->_longest_project_name();
+    $maxw = gp()->app->longest_project_name();
     $show_log = isset($options['log']);
     $verbose = (isset($options['v']) OR isset($options['verbose']));
 
@@ -22,7 +22,7 @@ class Bc {
 
     $projs_not_listed = array();
 
-    foreach (gp()->app->_get_project_list($options) as $project) {
+    foreach (gp()->app->get_project_list($options) as $project) {
       chdir($project->get_dir());
       $branches = $project->get_branches('a');
 
@@ -34,8 +34,8 @@ class Bc {
         continue;
       }
 
-      $commits_ahead = gp()->app->_git_branch_compare($branch1, $branch2, $verbose);
-      $commits_behind = gp()->app->_git_branch_compare($branch2, $branch1, $verbose);
+      $commits_ahead = gp()->app->git_branch_compare($branch1, $branch2, $verbose);
+      $commits_behind = gp()->app->git_branch_compare($branch2, $branch1, $verbose);
       echo sprintf(hl('%-'.($maxw+2).'s', 'lightcyan') . "%-12s is %2d commits ahead, %2d commits behind $branch2\n", $project->name, $branch1, count($commits_ahead), count($commits_behind));
 
       if ($show_log) {
