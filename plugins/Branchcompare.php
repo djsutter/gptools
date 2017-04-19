@@ -35,7 +35,7 @@ class Branchcompare {
 
     $projs_not_listed = array();
 
-    foreach (gp()->app->get_project_list($options) as $project) {
+    foreach (gp()->app->get_project_list() as $project) {
       chdir($project->get_dir());
       $branches = $project->get_branches('a');
 

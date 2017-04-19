@@ -47,7 +47,7 @@ class Listproj {
       return;
     }
 
-    foreach (gp()->app->get_project_list($options) as $project) {
+    foreach (gp()->app->get_project_list() as $project) {
       $dir = $project->get_dir();
       if (!is_dir($dir)) {
         if (isset($options['clone'])) {

@@ -193,12 +193,12 @@ class Application {
 
   /**
    * Get a list of projects, optionally filtered based on $options
-   * @param array $options
    */
-  public function get_project_list($options=array()) {
+  public function get_project_list() {
     $projects = array();
-    $include_projects = isset($options['include']) ? explode(',', $options['include']) : array();
-    $exclude_projects = isset($options['exclude']) ? explode(',', $options['exclude']) : array();
+    $opts = getopt('', array('exclude:', 'include:'));
+    $include_projects = isset($opts['include']) ? explode(',', $opts['include']) : array();
+    $exclude_projects = isset($opts['exclude']) ? explode(',', $opts['exclude']) : array();
     foreach ($this->projects as $project) {
       if (!empty($include_projects)) {
         if (in_array($project->name, $include_projects)) {
