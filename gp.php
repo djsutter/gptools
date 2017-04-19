@@ -1,6 +1,6 @@
 <?php
 /**
- * GitPerfect for Applications
+ * GitPproject Tool Suite for Applications
  *
  * Copyright (C) 2016 Duncan Sutter
  *
@@ -71,19 +71,12 @@ else { // The second arg list is to be run in each project
 
 // Get the options for this program using getopt()
 // Note that it automatically terminates at '--'
-$options = getopt('h', array('help', 'exclude:', 'include:'));
+$options = getopt('h', array('help'));
 
 // For now, there's only one help command
 if (isset($options['h']) OR isset($options['help'])) {
-  if ($command == '') {
-    $command = 'help';
-  }
-}
-
-// This one is different. If the -d option is specified, then it's a list command. We need to move the contents of $command back into $cmdargs
-if (isset($options['d']) && $command != 'list') {
-  array_unshift($cmdargs, $command);
-  $command = 'list';
+  show_help();
+  return;
 }
 
 class GP {
@@ -94,26 +87,58 @@ class GP {
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
   }
 
+  // Run gp
   function run($command, $cmdargs, $options) {
-    $this->app = new Application();
-    $this->app->init();
+    // Enumerate all the plugins
+    $plugins = array();
+    $d = dir($this->gpdir . '/plugins');
+    while (($entry = $d->read()) !== false) {
+      if (!preg_match('/\.php$/', $entry)) continue;
+      require_once $this->gpdir . '/plugins/' . $entry;
+      $pclass = str_replace('.php', '', $entry);
+      $plugins[$pclass] = new $pclass();
+    }
+    $d->close();
 
-    $aliases = array(
-      'branchcompare' => 'bc',
-      'mergestatus' => 'bc',
-      'list' => 'listproj',
-    );
+    // Gather the aliases as defined by the plugins
+    $aliases = array();
+    foreach ($plugins as $pclass => $plugin) {
+      if (method_exists($plugin, 'settings')) {
+        $settings = $plugin->settings();
+        if (!empty($settings->aliases)) {
+          foreach ($settings->aliases as $alias) {
+            $aliases[$alias] = $pclass;
+          }
+        }
+      }
+    }
 
+    // Match the command with an alias, if exists
     if (isset($aliases[$command])) {
       $command = $aliases[$command];
     }
 
-    $plugin_php = $this->gpdir . '/plugins/' . $command . '.php';
-    if (file_exists($plugin_php)) {
-      require_once $plugin_php;
-      $plugin_class = ucfirst($command);
-      $plugin = new $plugin_class();
-      $plugin->run();
+    $plugin = null;
+    $settings = null;
+
+    // Select the plugin that we're going to run and load the settings
+    $pclass = ucfirst($command);
+    if (isset($plugins[$pclass])) {
+      $plugin = $plugins[$pclass];
+      if (method_exists($plugin, 'settings')) {
+        $settings = $plugin->settings();
+      }
+    }
+
+    // Initialize the gp application
+    $this->app = new Application();
+    if (empty($settings->no_gp_init)) {
+      $this->app->init();
+    }
+
+    // Run the plugin, if defined
+    if ($plugin) {
+      $plugin->run($cmdargs);
       return;
     }
 
@@ -149,20 +174,7 @@ usage: gp [options] <command>
 
 Built-in commands:
 
-list           List the git projects which make up the application.
-               -b  Show current branch which is checked out
-               -d  Show directories
-
-branchcompare  List the projects, showing the merge status between the develop and master branches
-               Alias: bc
-               --log show the logs
-
-localbranchclean Deletes local branches that are fully merged and that have no corresponding remote branch.
-                 Use with caution! Suggest that you use "git fetch -p" prior to using this command.
-                 --dry-run  Show what branches would be deleted without taking any action
-                 --force    Force deletion even if not merged
-
---clone          clone projects that were added to the config.json, so if you add a new project, it will get cloned.
+TODO: Enumerate the plugins
 
 Global options: These are applicable to all (or most) commands
 --exclude=<comma separate list of project names>

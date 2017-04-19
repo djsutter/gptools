@@ -3,11 +3,11 @@
 /**
  * Chdir into each project directory and run a command.
  */
-
 class Defaultcmd {
   /**
    * Run this plug-in
-   * @param array $args
+   * TODO: Make this take $args like all the other plugins
+   * @param array $cmd
    */
   function run($cmd) {
     $options = getopt('hv', array('help', 'verbose'));
@@ -38,7 +38,7 @@ class Defaultcmd {
 
     // Now run the commands in each project directory
     $i = 0;
-    foreach (gp()->app->get_project_list($options) as $project) {
+    foreach (gp()->app->get_project_list() as $project) {
       if ($i > 0) echo "\n";
       echo hl($project->name, 'lightcyan', 'underline') . "\n";
       if (! @chdir($project->get_dir())) {

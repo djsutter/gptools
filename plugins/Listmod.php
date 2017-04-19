@@ -1,9 +1,15 @@
 <?php
 
+/**
+ * List Drupal modules
+ */
 class Listmod {
   private $module_list = array();
   private $options = array();
 
+  /**
+   * Run this plug-in
+   */
   function run() {
     $options = getopt('h', array('md5', 'help'));
 

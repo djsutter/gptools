@@ -1,8 +1,21 @@
 <?php
 
-class Bc {
+/**
+ * List the merge status of all projects
+ */
+class Branchcompare {
   /**
-   * List the merge status of all projects
+   * Define settings for this plug-in
+   * @return StdClass
+   */
+  function settings() {
+    return (object) array(
+      'aliases' => array('bc', 'mergestatus'),
+    );
+  }
+
+  /**
+   * Run this plug-in
    * @param array $args
    */
   function run($args) {
@@ -22,7 +35,7 @@ class Bc {
 
     $projs_not_listed = array();
 
-    foreach (gp()->app->get_project_list($options) as $project) {
+    foreach (gp()->app->get_project_list() as $project) {
       chdir($project->get_dir());
       $branches = $project->get_branches('a');
 

@@ -2,6 +2,16 @@
 
 class Listproj {
   /**
+   * Define settings for this plug-in
+   * @return StdClass
+   */
+  function settings() {
+    return (object) array(
+      'aliases' => array('list'),
+    );
+  }
+
+  /**
    * List the projects in this application
    * @param array $args
    */
@@ -37,7 +47,7 @@ class Listproj {
       return;
     }
 
-    foreach (gp()->app->get_project_list($options) as $project) {
+    foreach (gp()->app->get_project_list() as $project) {
       $dir = $project->get_dir();
       if (!is_dir($dir)) {
         if (isset($options['clone'])) {
