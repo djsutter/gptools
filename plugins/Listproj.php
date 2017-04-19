@@ -2,6 +2,16 @@
 
 class Listproj {
   /**
+   * Define settings for this plug-in
+   * @return StdClass
+   */
+  function settings() {
+    return (object) array(
+      'aliases' => array('list'),
+    );
+  }
+
+  /**
    * List the projects in this application
    * @param array $args
    */

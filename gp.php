@@ -94,25 +94,57 @@ class GP {
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
   }
 
+  // Run gp
   function run($command, $cmdargs, $options) {
-    $this->app = new Application();
-    $this->app->init();
+    // Enumerate all the plugins
+    $plugins = array();
+    $d = dir($this->gpdir . '/plugins');
+    while (($entry = $d->read()) !== false) {
+      if (!preg_match('/\.php$/', $entry)) continue;
+      require_once $this->gpdir . '/plugins/' . $entry;
+      $pclass = str_replace('.php', '', $entry);
+      $plugins[$pclass] = new $pclass();
+    }
+    $d->close();
 
-    $aliases = array(
-      'bc' => 'branchcompare',
-      'mergestatus' => 'branchcompare',
-      'list' => 'listproj',
-    );
+    // Gather the aliases as defined by the plugins
+    $aliases = array();
+    foreach ($plugins as $pclass => $plugin) {
+      if (method_exists($plugin, 'settings')) {
+        $settings = $plugin->settings();
+        if (!empty($settings->aliases)) {
+          foreach ($settings->aliases as $alias) {
+            $aliases[$alias] = $pclass;
+          }
+        }
+      }
+    }
 
+    // Match the command with an alias, if exists
     if (isset($aliases[$command])) {
       $command = $aliases[$command];
     }
 
-    $plugin_class = ucfirst($command);
-    $plugin_php = $this->gpdir . '/plugins/' . $plugin_class. '.php';
-    if (file_exists($plugin_php)) {
-      require_once $plugin_php;
-      $plugin = new $plugin_class();
+    $plugin = null;
+    $settings = null;
+
+    // Select the plugin that we're going to run and load the settings
+    $pclass = ucfirst($command);
+    if (isset($plugins[$pclass])) {
+      $plugin = $plugins[$pclass];
+      if (method_exists($plugin, 'settings')) {
+        $settings = $plugin->settings();
+      }
+    }
+
+    // Initialize the gp application
+    $this->app = new Application();
+    if (empty($settings->no_gp_init)) {
+      $this->app->init();
+    }
+
+    // Run the plugin, if defined
+    if ($plugin) {
       $plugin->run($cmdargs);
       return;
     }

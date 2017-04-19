@@ -5,6 +5,16 @@
  */
 class Branchcompare {
   /**
+   * Define settings for this plug-in
+   * @return StdClass
+   */
+  function settings() {
+    return (object) array(
+      'aliases' => array('bc', 'mergestatus'),
+    );
+  }
+
+  /**
    * Run this plug-in
    * @param array $args
    */
