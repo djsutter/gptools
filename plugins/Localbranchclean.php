@@ -12,7 +12,7 @@ class Localbranchclean {
    * @param array $args
    */
   function run($args) {
-    $options = getopt('h', array('help', 'log'));
+    $options = getopt('h', array('help', 'dry-run', 'force'));
 
     if (isset($options['h']) OR isset($options['help'])) {
       $this->help();

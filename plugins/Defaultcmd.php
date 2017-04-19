@@ -3,11 +3,11 @@
 /**
  * Chdir into each project directory and run a command.
  */
-
 class Defaultcmd {
   /**
    * Run this plug-in
-   * @param array $args
+   * TODO: Make this take $args like all the other plugins
+   * @param array $cmd
    */
   function run($cmd) {
     $options = getopt('hv', array('help', 'verbose'));

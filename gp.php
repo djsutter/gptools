@@ -99,8 +99,8 @@ class GP {
     $this->app->init();
 
     $aliases = array(
-      'branchcompare' => 'bc',
-      'mergestatus' => 'bc',
+      'bc' => 'branchcompare',
+      'mergestatus' => 'branchcompare',
       'list' => 'listproj',
     );
 
@@ -108,12 +108,12 @@ class GP {
       $command = $aliases[$command];
     }
 
-    $plugin_php = $this->gpdir . '/plugins/' . $command . '.php';
+    $plugin_class = ucfirst($command);
+    $plugin_php = $this->gpdir . '/plugins/' . $plugin_class. '.php';
     if (file_exists($plugin_php)) {
       require_once $plugin_php;
-      $plugin_class = ucfirst($command);
       $plugin = new $plugin_class();
-      $plugin->run();
+      $plugin->run($cmdargs);
       return;
     }
 

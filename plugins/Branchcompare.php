@@ -1,8 +1,11 @@
 <?php
 
-class Bc {
+/**
+ * List the merge status of all projects
+ */
+class Branchcompare {
   /**
-   * List the merge status of all projects
+   * Run this plug-in
    * @param array $args
    */
   function run($args) {
