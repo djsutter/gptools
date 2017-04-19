@@ -251,7 +251,7 @@ class Application {
    * @param string $branch1
    * @param string $branch2
    */
-  public function _git_branch_compare($branch1, $branch2, $verbose) {
+  public function git_branch_compare($branch1, $branch2, $verbose) {
     // It is necessary to put the branches inside quotes, especially when using the '^' symbol
     $cmd = 'git log --oneline "' . $branch1 . '" "^' . $branch2 . '"';
     if ($verbose) {
