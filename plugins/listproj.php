@@ -21,7 +21,7 @@ class Listproj {
       return;
     }
 
-    $maxw = gp()->app->_longest_project_name();
+    $maxw = gp()->app->longest_project_name();
     $show_branch = isset($options['b']);
     $show_dir = isset($options['d']);
 
@@ -37,7 +37,7 @@ class Listproj {
       return;
     }
 
-    foreach (gp()->app->_get_project_list($options) as $project) {
+    foreach (gp()->app->get_project_list($options) as $project) {
       $dir = $project->get_dir();
       if (!is_dir($dir)) {
         if (isset($options['clone'])) {

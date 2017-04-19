@@ -195,7 +195,7 @@ class Application {
    * Get a list of projects, optionally filtered based on $options
    * @param array $options
    */
-  public function _get_project_list($options=array()) {
+  public function get_project_list($options=array()) {
     $projects = array();
     $include_projects = isset($options['include']) ? explode(',', $options['include']) : array();
     $exclude_projects = isset($options['exclude']) ? explode(',', $options['exclude']) : array();
@@ -268,7 +268,7 @@ class Application {
    * Determine the length of the longest project name
    * @return int
    */
-  public function _longest_project_name() {
+  public function longest_project_name() {
     static $longest = 0;
     if ($longest == 0) {
       foreach ($this->projects as $project) {
