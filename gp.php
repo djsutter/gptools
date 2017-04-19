@@ -26,9 +26,6 @@ require_once "Application.php";
 $mydir = dirname($argv[0]);
 $mydir = preg_replace_callback('/^([A-Z]):/', function($match) { return strtolower($match[1]).':'; }, $mydir);
 
-$app = new Application();
-$app->init();
-
 // Get the program args, which may come in two parts (separated by --)
 // The first part contains options which apply either to this program, or to the program being run in each of the project folders.
 // The second part, if any, applies only to the program being run in each of the project folders.
@@ -74,11 +71,13 @@ else { // The second arg list is to be run in each project
 
 // Get the options for this program using getopt()
 // Note that it automatically terminates at '--'
-$options = getopt('bdhpv', array('clone', 'dry-run', 'force', 'log', 'help', 'exclude:', 'include:', 'ignore:', 'verbose'));
+$options = getopt('h', array('help', 'exclude:', 'include:'));
 
 // For now, there's only one help command
 if (isset($options['h']) OR isset($options['help'])) {
-  $command = 'help';
+  if ($command == '') {
+    $command = 'help';
+  }
 }
 
 // This one is different. If the -d option is specified, then it's a list command. We need to move the contents of $command back into $cmdargs
@@ -87,34 +86,59 @@ if (isset($options['d']) && $command != 'list') {
   $command = 'list';
 }
 
-if (isset($options['ignore'])) {
-  echo "--ignore? You mean --exclude?\n";
-  exit;
+class GP {
+  public $gpdir = '';
+  public $app = null;
+
+  function __construct() {
+    $this->gpdir = dirname($_SERVER['PHP_SELF']);
+  }
+
+  function run($command, $cmdargs, $options) {
+    $this->app = new Application();
+    $this->app->init();
+
+    $aliases = array(
+      'branchcompare' => 'bc',
+      'mergestatus' => 'bc',
+      'list' => 'listproj',
+    );
+
+    if (isset($aliases[$command])) {
+      $command = $aliases[$command];
+    }
+
+    $plugin_php = $this->gpdir . '/plugins/' . $command . '.php';
+    if (file_exists($plugin_php)) {
+      require_once $plugin_php;
+      $plugin_class = ucfirst($command);
+      $plugin = new $plugin_class();
+      $plugin->run();
+      return;
+    }
+
+    // Process commands
+    switch ($command) {
+      case 'help':
+        show_help();
+        break;
+
+      default:
+        global $args;
+        $cmd = empty($args[1]) ? join(' ', $args[0]) : join(' ', $args[1]);
+        require_once $this->gpdir . '/plugins/defaultcmd.php';
+        $cmd_class = new Defaultcmd();
+        $cmd_class->run($cmd);
+    }
+  }
 }
 
-// Process commands
-switch ($command) {
-  case 'list':
-    $app->list_projects($cmdargs, $options);
-    break;
+$gpobj = new GP();
+$gpobj->run($command, $cmdargs, $options);
 
-  case 'help':
-    show_help();
-    break;
-
-  case 'branchcompare':
-  case 'bc':
-  case 'mergestatus':
-    $app->branchcompare($cmdargs, $options);
-    break;
-
-  case 'localbranchclean':
-    $app->localbranchclean($cmdargs, $options);
-    break;
-
-  default:
-    $cmd = empty($args[1]) ? join(' ', $args[0]) : join(' ', $args[1]);
-    $app->run($cmd, $options);
+function gp() {
+  global $gpobj;
+  return $gpobj;
 }
 
 function show_help() {

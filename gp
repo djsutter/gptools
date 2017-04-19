@@ -1,2 +1,3 @@
 #!/bin/bash
-php /d/git/gitperfect/gp.php $*
+THISDIR=`dirname "$0"`
+php $THISDIR/gp.php $*

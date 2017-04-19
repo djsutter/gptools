@@ -19,55 +19,6 @@ class Application {
   }
 
   /**
-   * List the merge status of all projects
-   * @param array $options
-   */
-  function branchcompare($args, $options=array()) {
-    $maxw = $this->_longest_project_name();
-    $show_log = isset($options['log']);
-    $verbose = (isset($options['v']) OR isset($options['verbose']));
-
-    $cmp1 = isset($args[0]) ? $args[0] : 'origin/develop';
-    $cmp2 = isset($args[1]) ? $args[1] : 'origin/master';
-
-    $projs_not_listed = array();
-
-    foreach ($this->_get_project_list($options) as $project) {
-      chdir($project->get_dir());
-      $branches = $project->get_branches('a');
-
-      $branch1 = $project->branch_replace($cmp1);
-      $branch2 = $project->branch_replace($cmp2);
-
-      if (! in_array($branch1, $branches) OR ! in_array($branch2, $branches)) {
-        $projs_not_listed[] = $project->name;
-        continue;
-      }
-
-      $commits_ahead = $this->_git_branch_compare($branch1, $branch2, $verbose);
-      $commits_behind = $this->_git_branch_compare($branch2, $branch1, $verbose);
-      echo sprintf(hl('%-'.($maxw+2).'s', 'lightcyan') . "%-12s is %2d commits ahead, %2d commits behind $branch2\n", $project->name, $branch1, count($commits_ahead), count($commits_behind));
-
-      if ($show_log) {
-        foreach ($commits_ahead as $txt) {
-          echo "  > $txt\n";
-        }
-        if (count($commits_ahead) > 0 && count($commits_behind) > 0) {
-          echo "  ---------\n";
-        }
-        foreach ($commits_behind as $txt) {
-          echo "  < $txt\n";
-        }
-      }
-    }
-
-    if (! empty($projs_not_listed)) {
-      echo hl("\nWarning, the following projects were omitted because they are missing one or both branches, or might be missing from a configuration:\n", 'yellow');
-      echo hl(join(', ', $projs_not_listed), 'lightcyan') . "\n";
-    }
-  }
-
-  /**
    * Given a directory which comes from the JSON config, convert it to a full path.
    * The $dir may contain symbolic references using [] notation.
    * @param string $dir
@@ -109,8 +60,9 @@ class Application {
 
     // The JSON config can use [this] as a directory location that refers to the location of THIS SCRIPT.
     // Set this location now in the config->directories
-    global $mydir;
-    $this->config->directories->this = $mydir;
+    // TODO: This idea is obsolete and should be deprecated. It comes from a time when gp was in /c/documents, and documents
+    // was considered a git project as part of the pm site.
+    $this->config->directories->this = gp()->gpdir;
 
     // Create Project instances
     foreach ($this->config->git_projects as $name => $data) {
@@ -163,144 +115,6 @@ class Application {
     // Now that we have found the installation config (or not), we can set the application root directory
     if (! $this->_get_root_dir()) {
       exit_error("Cannot determine the application root directory.");
-    }
-  }
-
-  /**
-   * List the projects in this application
-   * @param array $options
-   */
-  function list_projects($args, $options=array()) {
-    // The -p option prints the current project
-    if (isset($options['p'])) {
-      $loc = `git config --local remote.origin.url`;
-      $proj = preg_replace('/.*\/(.*)\..*$/', '$1', $loc);
-      echo "$proj\n";
-      return;
-    }
-
-    $maxw = $this->_longest_project_name();
-    $show_branch = isset($options['b']);
-    $show_dir = isset($options['d']);
-
-    if (!empty($args)) {
-      $name = $args[0];
-      foreach ($this->projects as $project) {
-        if ($project->name == $name) {
-          echo $project->get_dir(). "\n";
-          return;
-        }
-      }
-      echo "Could not find project $name\n";
-      return;
-    }
-
-    foreach ($this->_get_project_list($options) as $project) {
-      $dir = $project->get_dir();
-      if (!is_dir($dir)) {
-        if (isset($options['clone'])) {
-          $dirparts = explode('/', $dir);
-          $proj_dir = array_pop($dirparts);
-          $inst_dir = join('/', $dirparts);
-          if (!is_dir($inst_dir)) {
-            mkdir($inst_dir, 0777, true);
-          }
-          chdir($inst_dir);
-          $cmd = 'git clone '.$project->origin.' '.$proj_dir;
-          echo hl("$cmd\n", 'lightgreen');
-          `$cmd`;
-          chdir($proj_dir);
-          `git config credential.helper store`;
-        }
-        else {
-          echo hl("Project '".$project->name."' does not exist. Maybe use --clone option\n", 'red');
-          continue;
-        }
-      }
-      printf(hl('%-'.($maxw+2).'s', 'lightcyan'), $project->name);
-      if ($show_branch) {
-        $project->get_branches();
-        printf('%-10s', $project->cur_branch);
-      }
-      if ($show_dir) {
-        echo " $dir";
-      }
-      echo "\n";
-    }
-  }
-
-  /**
-   * Removes local branches that are fully merged and where there is no corresponding remote-tracking branch.
-   * NOTE: Use with care! This will permanently delete a local branch. It is a good idea to do a git fetch first to ensure
-   * that all remote branches are known.
-   */
-  function localbranchclean($args, $options=array()) {
-    $dry_run = isset($options['dry-run']);
-    $force = isset($options['force']);
-
-    foreach ($this->_get_project_list($options) as $project) {
-      printf(hl('%s', 'lightcyan', 'underline') . "\n", $project->name);
-      chdir($project->get_dir());
-      $local_branches = $project->get_branches();
-      $remote_branches = $project->get_branches('rs');
-      foreach ($local_branches as $branch) {
-        if (! in_array($branch, $remote_branches)) {
-          $cmd = 'git branch' . ($force ? ' -D ' : ' -d ') . $branch;
-          echo "$cmd\n";
-          if (! $dry_run) {
-            `$cmd`;
-          }
-        }
-      }
-      echo "\n";
-    }
-  }
-
-  /**
-   * Chdir into each project directory and run a command.
-   * @param string $cmd
-   */
-  function run($cmd, $options) {
-    $verbose = (isset($options['v']) OR isset($options['verbose']));
-    // Break the command into segments and determine if any of the segments contain a substitution string (e.g. "b:")
-    $cmdsegs = explode(' ', $cmd);
-
-    // Handle any number of "branch segments" - these have a b: prefix
-    $bsegs = array();     // segment number
-    $bconfigs = array();  // config data
-
-    for ($i = 0; $i < count($cmdsegs); $i++) {
-      if (substr($cmdsegs[$i], 0, 2) == 'b:') {
-        $bsegs[] = $i;
-        $configuration = substr($cmdsegs[$i], 2);
-        if (! isset($this->config->configurations->$configuration)) {
-          echo "Sorry, can't find a configuration called \"$configuration\"\n";
-          exit;
-        }
-        $bconfigs[] = $this->config->configurations->$configuration;
-      }
-    }
-
-    // Now run the commands in each project directory
-    $i = 0;
-    foreach ($this->_get_project_list($options) as $project) {
-      if ($i > 0) echo "\n";
-      echo hl($project->name, 'lightcyan', 'underline') . "\n";
-      if (! @chdir($project->get_dir())) {
-        echo hl("Directory does not exist: " . $project->get_dir() . "\n", 'lightred');
-        echo hl("Project not installed?\n", 'lightred');
-        continue;
-      }
-      // Perform branch-segment substitutions
-      foreach ($bsegs as $i => $bseg) {
-        $cmdsegs[$bseg] = $bconfigs[$i]->{$project->name}->branch;
-        $cmd = join(' ', $cmdsegs);
-      }
-      if ($verbose) {
-        echo hl("$cmd\n", 'green');
-      }
-      echo `$cmd`;
-      $i++;
     }
   }
 
@@ -381,7 +195,7 @@ class Application {
    * Get a list of projects, optionally filtered based on $options
    * @param array $options
    */
-  private function _get_project_list($options=array()) {
+  public function _get_project_list($options=array()) {
     $projects = array();
     $include_projects = isset($options['include']) ? explode(',', $options['include']) : array();
     $exclude_projects = isset($options['exclude']) ? explode(',', $options['exclude']) : array();
@@ -437,7 +251,7 @@ class Application {
    * @param string $branch1
    * @param string $branch2
    */
-  private function _git_branch_compare($branch1, $branch2, $verbose) {
+  public function _git_branch_compare($branch1, $branch2, $verbose) {
     // It is necessary to put the branches inside quotes, especially when using the '^' symbol
     $cmd = 'git log --oneline "' . $branch1 . '" "^' . $branch2 . '"';
     if ($verbose) {
@@ -454,7 +268,7 @@ class Application {
    * Determine the length of the longest project name
    * @return int
    */
-  private function _longest_project_name() {
+  public function _longest_project_name() {
     static $longest = 0;
     if ($longest == 0) {
       foreach ($this->projects as $project) {
