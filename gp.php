@@ -47,8 +47,8 @@ $cmdargs = array();
 
 // Look for the command (first thing that isn't an option). Default is "list"
 // If the second arg list is empty then parse the first list for a command
+$command = '';
 if (empty($args[1])) {
-  $command = '';
   if (!empty($args[0])) {
     foreach ($args[0] as $a) {
       if (substr($a, 0, 1) != '-') {
@@ -61,12 +61,6 @@ if (empty($args[1])) {
       }
     }
   }
-  if ($command == '') {
-    $command = 'list';
-  }
-}
-else { // The second arg list is to be run in each project
-  $command = '';
 }
 
 // Get the options for this program using getopt()
@@ -74,9 +68,13 @@ else { // The second arg list is to be run in each project
 $options = getopt('h', array('help'));
 
 // For now, there's only one help command
-if (isset($options['h']) OR isset($options['help'])) {
+if ((isset($options['h']) OR isset($options['help'])) && !$command) {
   show_help();
   return;
+}
+
+if (empty($args[1]) && !$command) {
+  $command = 'list';
 }
 
 class GP {
