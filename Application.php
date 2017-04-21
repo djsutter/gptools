@@ -13,8 +13,14 @@ class Application {
   public $gitconfig = null;     // Git config file for whatever project the user is in
   public $projectdir = null;    // Directory containing the project where the git config was found
   public $installation = null;  // Name of the installation, if any
+  public $gpdir = null;         // The directory where gp is installed
+  public $plugin = null;        // The selected plugin to run
+  public $plugins = null;
+  public $plugin_settings = null;
+  public $plugin_aliases = null;
 
   function __construct() {
+    $this->gpdir = dirname($_SERVER['PHP_SELF']);
     $this->cwd = dospath(trim(`pwd`));
   }
 
@@ -62,7 +68,7 @@ class Application {
     // Set this location now in the config->directories
     // TODO: This idea is obsolete and should be deprecated. It comes from a time when gp was in /c/documents, and documents
     // was considered a git project as part of the pm site.
-    $this->config->directories->this = gp()->gpdir;
+    $this->config->directories->this = $this->gpdir;
 
     // Create Project instances
     foreach ($this->config->git_projects as $name => $data) {
@@ -115,6 +121,32 @@ class Application {
     // Now that we have found the installation config (or not), we can set the application root directory
     if (! $this->_get_root_dir()) {
       exit_error("Cannot determine the application root directory.");
+    }
+  }
+
+  function init_plugins() {
+    // Enumerate all the plugins
+    $this->plugins = array();
+    $d = dir($this->gpdir . '/plugins');
+    while (($entry = $d->read()) !== false) {
+      if (!preg_match('/\.php$/', $entry)) continue;
+      require_once $this->gpdir . '/plugins/' . $entry;
+      $pclass = str_replace('.php', '', $entry);
+      $this->plugins[$pclass] = new $pclass();
+    }
+    $d->close();
+
+    // Gather the aliases as defined by the plugins
+    $this->plugin_aliases = array();
+    foreach ($this->plugins as $pclass => $plugin) {
+      if (method_exists($plugin, 'settings')) {
+        $settings = $plugin->settings();
+        if (!empty($settings->aliases)) {
+          foreach ($settings->aliases as $alias) {
+            $this->plugin_aliases[$alias] = $pclass;
+          }
+        }
+      }
     }
   }
 
@@ -247,24 +279,6 @@ class Application {
   }
 
   /**
-   * Compare two git branches
-   * @param string $branch1
-   * @param string $branch2
-   */
-  public function git_branch_compare($branch1, $branch2, $verbose) {
-    // It is necessary to put the branches inside quotes, especially when using the '^' symbol
-    $cmd = 'git log --oneline "' . $branch1 . '" "^' . $branch2 . '"';
-    if ($verbose) {
-      echo hl("$cmd\n", 'green');
-    }
-    $result = trim(`$cmd`);
-    if ($result == '') {
-      return array();
-    }
-    return preg_split("/\r?\n/", $result);
-  }
-
-  /**
    * Determine the length of the longest project name
    * @return int
    */
@@ -294,5 +308,51 @@ class Application {
       }
     }
     return join('/', $segs);
+  }
+
+  public function run($command, $args) {
+    $this->init_plugins();
+
+    // Match the command with an alias, if exists
+    if (isset($this->plugin_aliases[$command])) {
+      $command = $this->plugin_aliases[$command];
+    }
+
+    // Select the plugin that we're going to run and load the settings
+    $pclass = ucfirst($command);
+    if (isset($this->plugins[$pclass])) {
+      $this->plugin = $this->plugins[$pclass];
+      if (method_exists($this->plugin, 'settings')) {
+        $this->plugin_settings = $this->plugin->settings();
+      }
+    }
+
+    // Initialize the gp application
+    if (empty($this->plugin_settings->no_gp_init)) {
+      $this->init();
+    }
+
+    // Run the plugin, if defined
+    if ($this->plugin) {
+      $this->plugin->run($cmdargs);
+      return;
+    }
+
+    // Process commands
+    switch ($command) {
+      case 'help':
+        $this->show_help();
+        break;
+
+      default:
+        $cmd = empty($args[1]) ? join(' ', $args[0]) : join(' ', $args[1]);
+        require_once $this->gpdir . '/plugins/defaultcmd.php';
+        $cmd_class = new Defaultcmd();
+        $cmd_class->run($cmd);
+    }
+  }
+
+  public function show_help() {
+    echo "GP Helpn";
   }
 }

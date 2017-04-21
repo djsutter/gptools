@@ -47,8 +47,8 @@ class Branchcompare {
         continue;
       }
 
-      $commits_ahead = gp()->app->git_branch_compare($branch1, $branch2, $verbose);
-      $commits_behind = gp()->app->git_branch_compare($branch2, $branch1, $verbose);
+      $commits_ahead = $this->_git_branch_compare($branch1, $branch2, $verbose);
+      $commits_behind = $this->_git_branch_compare($branch2, $branch1, $verbose);
       echo sprintf(hl('%-'.($maxw+2).'s', 'lightcyan') . "%-12s is %2d commits ahead, %2d commits behind $branch2\n", $project->name, $branch1, count($commits_ahead), count($commits_behind));
 
       if ($show_log) {
@@ -68,6 +68,24 @@ class Branchcompare {
       echo hl("\nWarning, the following projects were omitted because they are missing one or both branches, or might be missing from a configuration:\n", 'yellow');
       echo hl(join(', ', $projs_not_listed), 'lightcyan') . "\n";
     }
+  }
+
+  /**
+   * Compare two git branches
+   * @param string $branch1
+   * @param string $branch2
+   */
+  private function _git_branch_compare($branch1, $branch2, $verbose) {
+    // It is necessary to put the branches inside quotes, especially when using the '^' symbol
+    $cmd = 'git log --oneline "' . $branch1 . '" "^' . $branch2 . '"';
+    if ($verbose) {
+      echo hl("$cmd\n", 'green');
+    }
+    $result = trim(`$cmd`);
+    if ($result == '') {
+      return array();
+    }
+    return preg_split("/\r?\n/", $result);
   }
 
   function help() {

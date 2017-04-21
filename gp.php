@@ -78,86 +78,15 @@ if (empty($args[1]) && !$command) {
 }
 
 class GP {
-  public $gpdir = '';
   public $app = null;
-
-  function __construct() {
-    $this->gpdir = dirname($_SERVER['PHP_SELF']);
-  }
-
-  // Run gp
-  function run($command, $cmdargs, $options) {
-    // Enumerate all the plugins
-    $plugins = array();
-    $d = dir($this->gpdir . '/plugins');
-    while (($entry = $d->read()) !== false) {
-      if (!preg_match('/\.php$/', $entry)) continue;
-      require_once $this->gpdir . '/plugins/' . $entry;
-      $pclass = str_replace('.php', '', $entry);
-      $plugins[$pclass] = new $pclass();
-    }
-    $d->close();
-
-    // Gather the aliases as defined by the plugins
-    $aliases = array();
-    foreach ($plugins as $pclass => $plugin) {
-      if (method_exists($plugin, 'settings')) {
-        $settings = $plugin->settings();
-        if (!empty($settings->aliases)) {
-          foreach ($settings->aliases as $alias) {
-            $aliases[$alias] = $pclass;
-          }
-        }
-      }
-    }
-
-    // Match the command with an alias, if exists
-    if (isset($aliases[$command])) {
-      $command = $aliases[$command];
-    }
-
-    $plugin = null;
-    $settings = null;
-
-    // Select the plugin that we're going to run and load the settings
-    $pclass = ucfirst($command);
-    if (isset($plugins[$pclass])) {
-      $plugin = $plugins[$pclass];
-      if (method_exists($plugin, 'settings')) {
-        $settings = $plugin->settings();
-      }
-    }
-
-    // Initialize the gp application
+  function run($command, $cmdargs, $options, $args) {
     $this->app = new Application();
-    if (empty($settings->no_gp_init)) {
-      $this->app->init();
-    }
-
-    // Run the plugin, if defined
-    if ($plugin) {
-      $plugin->run($cmdargs);
-      return;
-    }
-
-    // Process commands
-    switch ($command) {
-      case 'help':
-        show_help();
-        break;
-
-      default:
-        global $args;
-        $cmd = empty($args[1]) ? join(' ', $args[0]) : join(' ', $args[1]);
-        require_once $this->gpdir . '/plugins/defaultcmd.php';
-        $cmd_class = new Defaultcmd();
-        $cmd_class->run($cmd);
-    }
+    $this->app->run($command, $args);
   }
 }
 
 $gpobj = new GP();
-$gpobj->run($command, $cmdargs, $options);
+$gpobj->run($command, $cmdargs, $options, $args);
 
 function gp() {
   global $gpobj;
