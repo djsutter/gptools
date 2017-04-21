@@ -31,7 +31,7 @@ class Listproj {
       return;
     }
 
-    $maxw = gp()->app->longest_project_name();
+    $maxw = gp()->longest_project_name();
     $show_branch = isset($options['b']);
     $show_dir = isset($options['d']);
 

@@ -18,8 +18,10 @@ class Application {
   public $plugins = null;
   public $plugin_settings = null;
   public $plugin_aliases = null;
+  public $app = null; // temporary
 
   function __construct() {
+    $this->app = $this;
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
     $this->cwd = dospath(trim(`pwd`));
   }
@@ -310,7 +312,7 @@ class Application {
     return join('/', $segs);
   }
 
-  public function run($command, $args) {
+  public function run($command, $cmdargs, $args) {
     $this->init_plugins();
 
     // Match the command with an alias, if exists

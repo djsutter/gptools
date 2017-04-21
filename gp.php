@@ -77,20 +77,12 @@ if (empty($args[1]) && !$command) {
   $command = 'list';
 }
 
-class GP {
-  public $app = null;
-  function run($command, $cmdargs, $options, $args) {
-    $this->app = new Application();
-    $this->app->run($command, $args);
-  }
-}
-
-$gpobj = new GP();
-$gpobj->run($command, $cmdargs, $options, $args);
+$app = new Application();
+$app->run($command, $cmdargs, $args);
 
 function gp() {
-  global $gpobj;
-  return $gpobj;
+  global $app;
+  return $app;
 }
 
 function show_help() {
