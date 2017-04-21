@@ -37,7 +37,7 @@ class Listproj {
 
     if (!empty($args)) {
       $name = $args[0];
-      foreach (gp()->app->projects as $project) {
+      foreach (gp()->projects as $project) {
         if ($project->name == $name) {
           echo $project->get_dir(). "\n";
           return;
@@ -47,7 +47,7 @@ class Listproj {
       return;
     }
 
-    foreach (gp()->app->get_project_list() as $project) {
+    foreach (gp()->get_project_list() as $project) {
       $dir = $project->get_dir();
       if (!is_dir($dir)) {
         if (isset($options['clone'])) {

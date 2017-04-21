@@ -26,7 +26,7 @@ class Branchcompare {
       return;
     }
 
-    $maxw = gp()->app->longest_project_name();
+    $maxw = gp()->longest_project_name();
     $show_log = isset($options['log']);
     $verbose = (isset($options['v']) OR isset($options['verbose']));
 
@@ -35,7 +35,7 @@ class Branchcompare {
 
     $projs_not_listed = array();
 
-    foreach (gp()->app->get_project_list() as $project) {
+    foreach (gp()->get_project_list() as $project) {
       chdir($project->get_dir());
       $branches = $project->get_branches('a');
 

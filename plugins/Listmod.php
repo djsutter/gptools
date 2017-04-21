@@ -24,8 +24,8 @@ class Listmod {
     $module_list = array();
 
     // Iterate through the module directories and collect information
-    foreach (gp()->app->config->module_directories as $dir) {
-      $this->find_modules(gp()->app->get_full_path($dir));
+    foreach (gp()->config->module_directories as $dir) {
+      $this->find_modules(gp()->get_full_path($dir));
     }
 
     ksort($this->module_list);

@@ -28,17 +28,17 @@ class Defaultcmd {
       if (substr($cmdsegs[$i], 0, 2) == 'b:') {
         $bsegs[] = $i;
         $configuration = substr($cmdsegs[$i], 2);
-        if (! isset(gp()->app->config->configurations->$configuration)) {
+        if (! isset(gp()->config->configurations->$configuration)) {
           echo "Sorry, can't find a configuration called \"$configuration\"\n";
           exit;
         }
-        $bconfigs[] = gp()->app->config->configurations->$configuration;
+        $bconfigs[] = gp()->config->configurations->$configuration;
       }
     }
 
     // Now run the commands in each project directory
     $i = 0;
-    foreach (gp()->app->get_project_list() as $project) {
+    foreach (gp()->get_project_list() as $project) {
       if ($i > 0) echo "\n";
       echo hl($project->name, 'lightcyan', 'underline') . "\n";
       if (! @chdir($project->get_dir())) {

@@ -25,7 +25,7 @@ class Initbuild {
       return;
     }
 
-//  if (empty(gp()->app->config)) {
+//  if (empty(gp()->config)) {
 //  }
 
     // The --initbuild=path option says, init the build config.
@@ -35,7 +35,7 @@ class Initbuild {
     }
 
     if (empty($path)) {
-      $path = gp()->app->cwd;
+      $path = gp()->cwd;
     }
     $base_project = basename($path);
     //echo $path;
