@@ -91,19 +91,34 @@ class Initbuild {
       if (file_exists( $dir . '/' . $project_name . '.info')) {
         $desc = $project_name . ' module';
       }
-      if (file_exists ( $dir . '/robots.txt') && file_exists ( $dir . '/cron.php') && file_exists ( $dir . '/includes/ajax.inc') ) {
-        //project is Drupal 7 and has a .git directory (meaning it is under source control.
-        $desc = $project_name . ' (Drupal 7 core)';
-      }
       $origin = $config['remote origin']['url'];
   //    "desc": "Build Information",
   //    "origin": "http://gitlab.ssc.etg.gc.ca/pco-bcp/pm_build.git",
   //    "dir": "[sites]/pm/build"
+      if (file_exists ( $dir . '/robots.txt') && file_exists ( $dir . '/cron.php') && file_exists ( $dir . '/includes/ajax.inc') ) {
+        //project is Drupal 7 and has a .git directory (meaning it is under source control.
+        $desc = $project_name . ' (Drupal 7 core)';
+      }
       $this->project_list[$base_project]['git_projects'][$project_name]['dir'] = $dir;
       $this->project_list[$base_project]['git_projects'][$project_name]['desc'] = $desc;
       $this->project_list[$base_project]['git_projects'][$project_name]['origin'] = $origin;
-      $this->project_list[$base_project]['configurations']['prod'][$project_name]['branch'] = 'master';
-      $this->project_list[$base_project]['configurations']['dev'][$project_name]['branch'] = 'develop';
+      foreach (preg_split("/\r?\n/", rtrim(`git -C $dir branch`)) as $branch) {
+        if ($branch[0] == '*') {
+          $this->cur_branch = substr($branch, 2);
+          $this->project_list[$base_project]['configurations']['dev'][$project_name]['branch'] = substr($branch, 2);
+        }
+        $this->local_branches[] = substr($branch, 2);
+        if (file_exists ( $dir . '/robots.txt') && file_exists ( $dir . '/cron.php') && file_exists ( $dir . '/includes/ajax.inc') ) {
+          //project is Drupal 7 and has a .git directory (meaning it is under source control.
+          $desc = $project_name . ' (Drupal 7 core)';
+          $this->project_list[$base_project]['configurations']['prod'][$project_name]['branch'] = substr($branch, 2);
+          $this->project_list[$base_project]['configurations']['rc'][$project_name]['branch'] = substr($branch, 2);
+        }
+        else {
+          $this->project_list[$base_project]['configurations']['rc'][$project_name]['branch'] = 'rc';
+          $this->project_list[$base_project]['configurations']['prod'][$project_name]['branch'] = 'master';
+        }
+      }
     }
   }
 
