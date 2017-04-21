@@ -18,10 +18,10 @@ class Application {
   public $plugins = null;
   public $plugin_settings = null;
   public $plugin_aliases = null;
-  public $app = null; // temporary
+//  public $app = null; // no longer needed was refactored out.
 
   function __construct() {
-    $this->app = $this;
+//  $this->app = $this; // no longer needed was refactored out.
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
     $this->cwd = dospath(trim(`pwd`));
   }
