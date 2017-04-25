@@ -16,7 +16,6 @@ class Application {
   public $gpdir = null;         // The directory where gp is installed
   public $plugin = null;        // The selected plugin to run
   public $plugins = null;
-  public $extension = null;     // The extension to run
   public $extensions = null;    // Extensions filenames start with underscore, locate in plugin folder but not a plugin
   public $plugin_settings = null;
   public $plugin_aliases = null;
@@ -26,6 +25,7 @@ class Application {
 //  $this->app = $this; // no longer needed was refactored out.
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
     $this->cwd = dospath(trim(`pwd`));
+    $this->init_extensions();//start extensions early on so they can run pre_init and pre_run hooks.
   }
 
   /**
@@ -164,8 +164,8 @@ class Application {
     while (($entry = $d->read()) !== false) {
       if (!$this->substr_startswith($entry, '_') OR !preg_match('/\.php$/', $entry)) continue;
       require_once $this->gpdir . '/plugins/' . $entry;
-//       $extclass = str_replace('.php', '', $entry);
-//       $this->extensions[$extclass] = new $extclass();
+      $extname = str_replace('.php', '', $entry);
+      $this->extensions[] = $extname;
     }
     $d->close();
   }
@@ -330,15 +330,17 @@ class Application {
     return join('/', $segs);
   }
 
-   private function _call_ext($ext, $data=null) {
-     if (function_exists('gp_ext_' . $ext)) {
-       'gp_ext_' . $ext($data);
-     }
-   }
+  private function _call_ext($ext, $data=null) {
+    foreach ($this->extensions as $extension) {
+      if (function_exists($extension . '_' . $ext)) {
+        $func = $extension . '_' . $ext;
+        $func($data);
+      }
+    }
+  }
 
   public function run($command, $cmdargs, $args) {
     $this->_call_ext('pre_run');
-
     $this->init_plugins();
 
     // Match the command with an alias, if exists
