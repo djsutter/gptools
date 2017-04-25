@@ -54,7 +54,11 @@ class Defaultcmd {
       if ($verbose) {
         echo hl("$cmd\n", 'green');
       }
-      echo `$cmd`;
+      $result = system($cmd, $rc);
+      if ($rc != 0) {
+        echo hl("***** ERROR RC=$rc *****\n", 'lightred');
+      }
+      echo $result;
       $i++;
     }
   }

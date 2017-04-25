@@ -330,7 +330,15 @@ class Application {
     return join('/', $segs);
   }
 
+   private function _call_ext($ext, $data=null) {
+     if (function_exists('gp_ext_' . $ext)) {
+       'gp_ext_' . $ext($data);
+     }
+   }
+
   public function run($command, $cmdargs, $args) {
+    $this->_call_ext('pre_run');
+
     $this->init_plugins();
 
     // Match the command with an alias, if exists
@@ -349,7 +357,9 @@ class Application {
 
     // Initialize the gp application
     if (empty($this->plugin_settings->no_gp_init)) {
+      $this->_call_ext('pre_init');
       $this->init();
+      $this->_call_ext('post_init');
     }
 
     // Run the plugin, if defined
