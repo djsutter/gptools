@@ -16,6 +16,8 @@ class Application {
   public $gpdir = null;         // The directory where gp is installed
   public $plugin = null;        // The selected plugin to run
   public $plugins = null;
+  public $extension = null;     // The extension to run
+  public $extensions = null;    // Extensions filenames start with underscore, locate in plugin folder but not a plugin
   public $plugin_settings = null;
   public $plugin_aliases = null;
 //  public $app = null; // no longer needed was refactored out.
@@ -150,6 +152,22 @@ class Application {
         }
       }
     }
+  }
+
+  /**
+   * Initializes all extensions starting with _ ending with .php found in the plugins folder.
+   */
+  function init_extensions() {
+    // Enumerate all the extensions
+    $this->extensions = array();
+    $d = dir($this->gpdir . '/plugins');
+    while (($entry = $d->read()) !== false) {
+      if (!$this->substr_startswith($entry, '_') && !preg_match('/\.php$/', $entry)) continue;
+      require_once $this->gpdir . '/plugins/' . $entry;
+//       $extclass = str_replace('.php', '', $entry);
+//       $this->extensions[$extclass] = new $extclass();
+    }
+    $d->close();
   }
 
   /**
@@ -352,6 +370,10 @@ class Application {
         $cmd_class = new Defaultcmd();
         $cmd_class->run($cmd);
     }
+  }
+
+  public function substr_startswith($haystack, $needle) {
+    return substr($haystack, 0, strlen($needle)) === $needle;
   }
 
   public function show_help() {
