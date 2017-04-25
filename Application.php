@@ -133,7 +133,7 @@ class Application {
     $this->plugins = array();
     $d = dir($this->gpdir . '/plugins');
     while (($entry = $d->read()) !== false) {
-      if (!preg_match('/\.php$/', $entry)) continue;
+      if ($this->substr_startswith($entry, '_') OR !preg_match('/\.php$/', $entry)) continue;
       require_once $this->gpdir . '/plugins/' . $entry;
       $pclass = str_replace('.php', '', $entry);
       $this->plugins[$pclass] = new $pclass();
@@ -162,7 +162,7 @@ class Application {
     $this->extensions = array();
     $d = dir($this->gpdir . '/plugins');
     while (($entry = $d->read()) !== false) {
-      if (!$this->substr_startswith($entry, '_') && !preg_match('/\.php$/', $entry)) continue;
+      if (!$this->substr_startswith($entry, '_') OR !preg_match('/\.php$/', $entry)) continue;
       require_once $this->gpdir . '/plugins/' . $entry;
 //       $extclass = str_replace('.php', '', $entry);
 //       $this->extensions[$extclass] = new $extclass();
