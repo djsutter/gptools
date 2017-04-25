@@ -331,7 +331,7 @@ class Application {
   }
 
   private function _call_ext($ext, $data=null) {
-    foreach ($this->extensions as $extension) {
+    foreach ($this->extensions as &$extension) {
       if (function_exists($extension . '_' . $ext)) {
         $func = $extension . '_' . $ext;
         $func($data);
@@ -341,7 +341,12 @@ class Application {
 
   public function run($command, $cmdargs, $args) {
     $this->_call_ext('pre_run');
+    $this->_call_ext('pre_run_command', $command);
+    $this->_call_ext('pre_run_cmdargs', $cmdargs);
+    $this->_call_ext('pre_run_args', $args);
+
     $this->init_plugins();
+    $this->_call_ext('post_init_plugins', $args);
 
     // Match the command with an alias, if exists
     if (isset($this->plugin_aliases[$command])) {
