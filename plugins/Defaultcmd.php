@@ -54,11 +54,26 @@ class Defaultcmd {
       if ($verbose) {
         echo hl("$cmd\n", 'green');
       }
-      $result = system($cmd, $rc);
-      if ($rc != 0) {
-        echo hl("***** ERROR RC=$rc *****\n", 'lightred');
+
+      // Run the command inside a try block. If an exception happens, then call all registered handlers.
+      // The handlers may set gp()->rerun_cmd to true, in which case the command should be run again.
+      gp()->rerun_cmd = true;
+      while (gp()->rerun_cmd) {
+        try {
+          gp()->rerun_cmd = false;
+          $result = system($cmd, $rc);
+          if ($rc != 0) {
+            echo hl("***** ERROR RC=$rc *****\n", 'lightred');
+            throw(new Exception('System command failed', $rc));
+          }
+          echo $result;
+        }
+        catch (Exception $e) {
+          foreach (gp()->cmd_exception_handlers as $handler) {
+            $handler($e);
+          }
+        }
       }
-      echo $result;
       $i++;
     }
   }

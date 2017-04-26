@@ -6,23 +6,23 @@ require_once "Project.php";
  * Class to hold an application, which consists of git projects
  */
 class Application {
-  public $config;               // Configuration from appdata.json
-  public $projects = array();   // List of Projects (objs) for this application
-  public $root = null;          // Root directory for this application
-  public $cwd = null;           // Current working directory (where the program was started from)
-  public $gitconfig = null;     // Git config file for whatever project the user is in
-  public $projectdir = null;    // Directory containing the project where the git config was found
-  public $installation = null;  // Name of the installation, if any
-  public $gpdir = null;         // The directory where gp is installed
-  public $plugin = null;        // The selected plugin to run
+  public $config;                  // Configuration from appdata.json
+  public $projects = array();      // List of Projects (objs) for this application
+  public $root = null;             // Root directory for this application
+  public $cwd = null;              // Current working directory (where the program was started from)
+  public $gitconfig = null;        // Git config file for whatever project the user is in
+  public $projectdir = null;       // Directory containing the project where the git config was found
+  public $installation = null;     // Name of the installation, if any
+  public $gpdir = null;            // The directory where gp is installed
+  public $plugin = null;           // The selected plugin to run
   public $plugins = null;
-  public $extensions = null;    // Extensions filenames start with underscore, locate in plugin folder but not a plugin
+  public $extensions = null;       // Extensions filenames start with underscore, locate in plugin folder but not a plugin
   public $plugin_settings = null;
   public $plugin_aliases = null;
-//  public $app = null; // no longer needed was refactored out.
+  public $cmd_exception_handlers = array(); // List of registered functions to handle exceptions when running system commands
+  public $rerun_cmd = false;       // Flag to re-run a command afer handling an exception
 
   function __construct() {
-//  $this->app = $this; // no longer needed was refactored out.
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
     $this->cwd = dospath(trim(`pwd`));
     $this->init_extensions();//start extensions early on so they can run pre_init and pre_run hooks.
@@ -339,6 +339,20 @@ class Application {
     }
   }
 
+  /**
+   * Register a callback function to be notified of an exception when running a system command.
+   * @param string $func
+   */
+  public function register_cmd_exception_handler($func) {
+    $this->cmd_exception_handlers[] = $func;
+  }
+
+  /**
+   * Run a gp command
+   * @param string $command
+   * @param array $cmdargs
+   * @param array $args
+   */
   public function run($command, $cmdargs, $args) {
     $this->_call_ext('pre_run');
     $this->_call_ext('pre_run_command', $command);
