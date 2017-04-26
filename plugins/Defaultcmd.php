@@ -66,7 +66,6 @@ class Defaultcmd {
             echo hl("***** ERROR RC=$rc *****\n", 'lightred');
             throw(new Exception('System command failed', $rc));
           }
-          echo $result;
         }
         catch (Exception $e) {
           foreach (gp()->cmd_exception_handlers as $handler) {
