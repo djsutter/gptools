@@ -6,21 +6,23 @@ require_once "Project.php";
  * Class to hold an application, which consists of git projects
  */
 class Application {
-  public $config;                  // Configuration from appdata.json
-  public $projects = array();      // List of Projects (objs) for this application
-  public $root = null;             // Root directory for this application
-  public $cwd = null;              // Current working directory (where the program was started from)
-  public $gitconfig = null;        // Git config file for whatever project the user is in
-  public $projectdir = null;       // Directory containing the project where the git config was found
-  public $installation = null;     // Name of the installation, if any
-  public $gpdir = null;            // The directory where gp is installed
-  public $plugin = null;           // The selected plugin to run
-  public $plugins = null;
-  public $extensions = null;       // Extensions filenames start with underscore, locate in plugin folder but not a plugin
-  public $plugin_settings = null;
-  public $plugin_aliases = null;
+  public $config;                           // Configuration from appdata.json
+  public $projects = array();               // List of Projects (objs) for this application
+  public $root = null;                      // Root directory for this application
+  public $cwd = null;                       // Current working directory (where the program was started from)
+  public $gitconfig = null;                 // Git config file for whatever project the user is in
+  public $projectdir = null;                // Directory containing the project where the git config was found
+  public $installation = null;              // Name of the installation, if any
+  public $gpdir = null;                     // The directory where gp is installed
+  public $plugin = null;                    // The selected plugin to run
+  public $plugins = array();                // List of installed plugins (name => plugin)
+  public $extensions = null;                // Extensions filenames start with underscore, locate in plugin folder but not a plugin
+  public $plugin_aliases = null;            // List of plugin aliases (alias => plugin)
   public $cmd_exception_handlers = array(); // List of registered functions to handle exceptions when running system commands
-  public $rerun_cmd = false;       // Flag to re-run a command afer handling an exception
+  public $rerun_cmd = false;                // Flag to re-run a command afer handling an exception
+  public $run_command = '';                 // Name of system-command being run
+  public $run_cmdargs = array();            // List of args for command
+  public $run_args = array();               // List of args for the run() function
 
   function __construct() {
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
@@ -353,14 +355,14 @@ class Application {
    * @param array $cmdargs
    * @param array $args
    */
-  public function run($command, $cmdargs, $args) {
-    $this->_call_ext('pre_run');
-    $this->_call_ext('pre_run_command', $command);
-    $this->_call_ext('pre_run_cmdargs', $cmdargs);
-    $this->_call_ext('pre_run_args', $args);
+  public function run($command, $cmdargs=array(), $args=array()) {
+    $this->run_command = $command;
+    $this->run_cmdargs = $cmdargs;
+    $this->run_args = $args;
 
+    $this->_call_ext('pre_run');
     $this->init_plugins();
-    $this->_call_ext('post_init_plugins', $args);
+    $this->_call_ext('post_init_plugins');
 
     // Match the command with an alias, if exists
     if (isset($this->plugin_aliases[$command])) {
@@ -369,15 +371,16 @@ class Application {
 
     // Select the plugin that we're going to run and load the settings
     $pclass = ucfirst($command);
+    $plugin_settings = null;
     if (isset($this->plugins[$pclass])) {
       $this->plugin = $this->plugins[$pclass];
       if (method_exists($this->plugin, 'settings')) {
-        $this->plugin_settings = $this->plugin->settings();
+        $plugin_settings = $this->plugin->settings();
       }
     }
 
     // Initialize the gp application
-    if (empty($this->plugin_settings->no_gp_init)) {
+    if (empty($plugin_settings->no_gp_init)) {
       $this->_call_ext('pre_init');
       $this->init();
       $this->_call_ext('post_init');
