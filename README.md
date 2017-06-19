@@ -49,6 +49,12 @@ and it must contain the config.json file.
   showing the log message for each commit that exists in one branch and not the other.</dd>
 </dl>
 
+## How to clone an entire project
+
+To clone an entire project, all that is needed to begin is to acquire the config.json file which describes the full project configuration.
+Normally it will be located in a gitlab project of its own. So create enough of your directory structure so that you can clone the "build" project,
+then git clone that project. Next, cd into that directory and type "gp --clone". It should clone the other projects.
+
 ## Plugins
 
 Plugins are used to implement gp commands. They are PHP classes, and go in the plugins directory.

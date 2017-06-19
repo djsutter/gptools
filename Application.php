@@ -275,7 +275,11 @@ class Application {
     // See if our git project matches one in the project config.
     // If so, then determine the application root directory based on the location of this project
     $origin = $this->gitconfig['remote origin']['url'];
+    // Remove username if it exists
+    $origin = preg_replace('://.*@:', '//', $origin);
     foreach ($this->projects as $project) {
+      // Remove username if it exists
+      $project_orign = preg_replace('://.*@:', '//', $project->origin);
       if ($project->origin == $origin) {
         $dir = $project->dir;
         if (preg_match('/\[(.*)\]/', $dir, $matches)) {
