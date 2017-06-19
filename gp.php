@@ -19,6 +19,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+$conf['gp_config_path'] = 'build/config.json';
+
+if ($env_gp_config_path = getenv('GP_CONFIG_PATH')) {
+  $conf['gp_config_path'] = $env_gp_config_path;
+}
+
 require_once "gp_utils.php";
 require_once "Application.php";
 

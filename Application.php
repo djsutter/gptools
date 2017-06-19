@@ -60,14 +60,14 @@ class Application {
   }
 
   function init() {
-    // The first step is to get the nearest git config so that we can establish the current application
-    if (! $this->_get_gitconfig()) {
-      exit_error("Cannot find a git project in your directory hierarchy.");
-    }
-
-    // Now get the application configuration
+    // Get the application configuration
     if (! $this->_get_appconfig()) {
       exit_error("Cannot find build/config.json in your directory hierarchy.");
+    }
+
+    // Get the nearest git config so that we can establish the current application
+    if (! $this->_get_gitconfig()) {
+      exit_error("Cannot find a git project in your directory hierarchy.");
     }
 
     // The JSON config can use [this] as a directory location that refers to the location of THIS SCRIPT.
@@ -177,41 +177,35 @@ class Application {
    * load the config.json file.
    */
   private function _get_appconfig() {
+    global $conf;
+
     // If we already have it, then return it
     if ($this->config) {
       return $this->config;
     }
 
-    // Search up through the directories
-    // But first see if it's the current directory
-    $path = $this->cwd;
-    if (preg_match('/\/build$/', $path) && is_readable('config.json')) {
-      $this->config = json_decode(file_get_contents('config.json'));
-      if (empty($this->config)) {
-        echo hl("Cannot read config.json - ".json_last_error_msg()."\n", 'red');
-      }
-    }
-    else {
-      while (1) {
-        if (is_dir($path . '/build')) {
-          if (is_readable($path . '/build/config.json')) {
-            $this->config = json_decode(file_get_contents($path . '/build/config.json'));
-            if (empty($this->config)) {
-              echo hl("Cannot read config.json - ".json_last_error_msg()."\n", 'red');
-            }
-            break;
+    // Allow multiple paths separated by ':'
+    $gp_config_paths = explode(':', $conf['gp_config_path']);
+
+    // Search up through the directories, starting from the current working directory
+    $dir = $this->cwd;
+    while (1) {
+      foreach ($gp_config_paths as $config_path) {
+        $config_file = "$dir/$config_path";
+        if (is_readable($config_file)) {
+          $this->config = json_decode(file_get_contents($config_file));
+          if (empty($this->config)) {
+            echo hl("Cannot read $config_file - ".json_last_error_msg()."\n", 'red');
           }
-          else {
-            echo $path . "/build/config.json is not readable.\n";
-          }
+          break 2;
         }
-        // Go up another level. We're at the top when $p == $path
-        $p = dirname($path);
-        if ($p == $path) {
-          break;
-        }
-        $path = $p;
       }
+      // Go up another level. We're at the top when $p == $path
+      $p = dirname($dir);
+      if ($p == $dir) {
+        break;
+      }
+      $dir = $p;
     }
 
     return $this->config;

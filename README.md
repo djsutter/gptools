@@ -10,8 +10,11 @@ through the use of plug-ins and extensions, which are discussed below.
 ## Configuration
 
 For gp to work requires some initial configuration. When you type the gp command, it will search up through the
-directory hierarchy until it finds a file called build/config.json. When it does, it will read that file and use it to
+directory hierarchy until it finds a file called build/config.json (default). When it does, it will read that file and use it to
 navigate through the application's git projects.
+
+You can optionally set an environment variable called GP_CONFIG_PATH, which can contain multiple paths. Here is an example:
+GP_CONFIG_PATH=my/project/gp.json:sites/pm/build/config.json
 
 Therefore, you currently need to have a folder called 'build' as close as possible to the root directory of your application,
 and it must contain the config.json file.
