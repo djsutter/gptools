@@ -14,7 +14,7 @@ directory hierarchy until it finds a file called build/config.json (default). Wh
 navigate through the application's git projects.
 
 You can optionally set an environment variable called GP_CONFIG_PATH, which can contain multiple paths. Here is an example:
-GP_CONFIG_PATH=my/project/gp.json:sites/pm/build/config.json
+GP_CONFIG_PATH=my/project/gp.json:sites/build/config.json
 
 Therefore, you currently need to have a folder called 'build' as close as possible to the root directory of your application,
 and it must contain the config.json file.

@@ -92,9 +92,6 @@ class Initbuild {
         $desc = $project_name . ' module';
       }
       $origin = $config['remote origin']['url'];
-  //    "desc": "Build Information",
-  //    "origin": "http://gitlab.ssc.etg.gc.ca/pco-bcp/pm_build.git",
-  //    "dir": "[sites]/pm/build"
       if (file_exists ( $dir . '/robots.txt') && file_exists ( $dir . '/cron.php') && file_exists ( $dir . '/includes/ajax.inc') ) {
         //project is Drupal 7 and has a .git directory (meaning it is under source control.
         $desc = $project_name . ' (Drupal 7 core)';

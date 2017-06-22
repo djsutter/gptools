@@ -70,12 +70,6 @@ class Application {
       exit_error("Cannot find a git project in your directory hierarchy.");
     }
 
-    // The JSON config can use [this] as a directory location that refers to the location of THIS SCRIPT.
-    // Set this location now in the config->directories
-    // TODO: This idea is obsolete and should be deprecated. It comes from a time when gp was in /c/documents, and documents
-    // was considered a git project as part of the pm site.
-    $this->config->directories->this = $this->gpdir;
-
     // Create Project instances
     foreach ($this->config->git_projects as $name => $data) {
       $this->projects[] = new Project($this, $name, $data);
