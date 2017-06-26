@@ -49,11 +49,11 @@ class Application {
   function get_full_path($dir) {
     $this->debug("Get full path for $dir");
     // Perform any substitutions inside square brackets
-    if (preg_match('/\[(.*)\]/', $dir, $matches)) {
+    if (preg_match('/\[(.*?)\]/', $dir, $matches)) {
       if (isset($this->config->directories->$matches[1])) {
         $sub = $this->config->directories->$matches[1];
         if ($sub) $sub .= '/';
-        $dir = preg_replace('/\[.*\]\/?/', $sub, $dir);
+        $dir = preg_replace('/\[.*?\]\/?/', $sub, $dir);
       }
     }
 
