@@ -50,15 +50,10 @@ class Application {
     $this->debug("Get full path for $dir");
     // Perform any substitutions inside square brackets
     if (preg_match('/\[(.*?)\]/', $dir, $matches)) {
-      $this->debug('...found square brackets');
-      $this->debug(print_r($matches, true));
-      $this->debug(print_r($this->config->directories, true));
       if (isset($this->config->directories->{$matches[1]})) {
         $sub = $this->config->directories->{$matches[1]};
         if ($sub) $sub .= '/';
-        $this->debug("sub=$sub");
         $dir = preg_replace('/\[.*?\]\/?/', $sub, $dir);
-        $this->debug("dir is now $dir");
       }
     }
 
@@ -297,8 +292,8 @@ class Application {
       if ($project->origin == $origin) {
         $dir = $project->dir;
         if (preg_match('/\[(.*)\]/', $dir, $matches)) {
-          if (isset($this->config->directories->$matches[1])) {
-            $dir = preg_replace('/\[.*\]/', $this->config->directories->$matches[1], $dir);
+          if (isset($this->config->directories->{$matches[1]})) {
+            $dir = preg_replace('/\[.*\]/', $this->config->directories->{$matches[1]}, $dir);
           }
         }
         $pdir = '\\/'.str_replace('/', '\\/', $dir);
