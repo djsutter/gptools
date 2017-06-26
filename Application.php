@@ -23,13 +23,23 @@ class Application {
   public $run_command = '';                 // Name of system-command being run
   public $run_cmdargs = array();            // List of args for command
   public $run_args = array();               // List of args for the run() function
+  public $debug_mode = false;               // Flag to print debug info
 
   function __construct() {
+    $options = getopt(null, array('debug'));
+    if (isset($options['debug'])) $this->debug_mode = true;
+    $this->debug('Debug mode enabled.');
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
+    $this->debug('gpdir='.$this->gpdir);
     $this->cwd = dospath(trim(`pwd`));
+    $this->debug('cwd='.$this->cwd);
     $this->init_extensions();//start extensions early on so they can run pre_init and pre_run hooks.
   }
 
+  function debug($str) {
+    if (!$this->debug_mode) return;
+    echo hl($str, 'darkgray')."\n";
+  }
   /**
    * Given a directory which comes from the JSON config, convert it to a full path.
    * The $dir may contain symbolic references using [] notation.
@@ -37,6 +47,7 @@ class Application {
    * @return string
    */
   function get_full_path($dir) {
+    $this->debug("Get full path for $dir");
     // Perform any substitutions inside square brackets
     if (preg_match('/\[(.*)\]/', $dir, $matches)) {
       if (isset($this->config->directories->$matches[1])) {
@@ -48,7 +59,9 @@ class Application {
 
     // Make it an absolute path if not already
     if (! is_absolute_path($dir)) {
+      $dstr = "Make absolute path for $dir: ";
       $dir = $this->root . '/' . $dir;
+      $this->debug($dstr.$dir);
     }
 
     // As long as $dir is not '/' then remove any trailing slash
@@ -56,6 +69,7 @@ class Application {
       $dir = preg_replace('/\/$/', '', $dir);
     }
 
+    $this->debug("--> $dir");
     return $dir;
   }
 
@@ -220,6 +234,7 @@ class Application {
       if (is_dir($path . '/.git')) {
         $this->gitconfig = parse_ini_file($path . '/.git/config', true);
         $this->projectdir = $path;
+        $this->debug('Using .git/config in '.$this->projectdir);
         break;
       }
       // Go up another level. We're at the top when $p == $path
