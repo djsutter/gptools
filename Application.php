@@ -50,6 +50,7 @@ class Application {
     $this->debug("Get full path for $dir");
     // Perform any substitutions inside square brackets
     if (preg_match('/\[(.*?)\]/', $dir, $matches)) {
+      $this->debug('...found square brackets');
       if (isset($this->config->directories->$matches[1])) {
         $sub = $this->config->directories->$matches[1];
         if ($sub) $sub .= '/';
