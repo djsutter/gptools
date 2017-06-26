@@ -67,6 +67,60 @@ function get_network_drives() {
   return $netdrives;
 }
 
+/**
+ * The gp version of the built-in getopt(), to provide required functionality.
+ * @param array $options
+ * @param array $longopts
+ * @return array
+ */
+function gp_getopt($options, $longopts=array()) {
+  $opts = array();
+  $len = strlen($options);
+  $opt = null;
+  for ($i = 0; $i < $len; $i++) {
+    if ($options[$i] == ':') {
+      $opts[$opt] .= ':';
+      continue;
+    }
+    $opt = '-'.$options[$i];
+    $opts[$opt] = '';
+  }
+
+  $opt = null;
+  foreach ($longopts as $opt) {
+    if ($p = strpos($opt, ':')) {
+      $optv = substr($opt, $p);
+      $opt = '--'.substr($opt, 0, $p);
+    }
+    else {
+      $opt = '--'.$opt;
+    }
+    $opts[$opt] = $optv;
+  }
+
+  echo "options: $options\n";
+  echo "longopts: ".join(' ', $longopts)."\n";
+  print_r($opts);
+
+  $result = array();
+  $n = 0;
+//  echo "args: " . join(' ', $_SERVER['argv']) . "\n";
+  $cnt = count($_SERVER['argv']);
+  for ($i = 1; $i < $cnt; $i++) {
+    $arg = $_SERVER['argv'][$i];
+    echo "arg=$arg\n";
+    if (isset($opts[$arg])) {
+      $result[preg_replace('/^--?/', '', $arg)] = '';
+    }
+    else {
+      $result[$n++] = $arg;
+    }
+  }
+
+  echo "result=".print_r($result, true)."\n";
+  return $result;
+}
+
 function os_type() {
   // Msys (Git Bash), GNU/Linux, Darwin (OSX), Freebsd, etc...
   return trim(`uname -o`);
