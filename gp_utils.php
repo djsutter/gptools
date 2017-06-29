@@ -68,12 +68,17 @@ function get_network_drives() {
 }
 
 /**
- * The gp version of the built-in getopt(), to provide required functionality.
+ * The gp version of the built-in getopt(), to provide required functionality. The problem with the built-in getopt() is that
+ * it expects all options to precede the command args, and this won't work with gp. We need to support the syntax:
+ * gp <args> <gp-opts> -- <command> <command-opts>
+ * The implementation here is similar to getopt() however it cannot support optional parameters for options because it would
+ * have no way of knowing whether the arg is an option or a gp command.
  * @param array $options
  * @param array $longopts
  * @return array
  */
 function gp_getopt($options, $longopts=array()) {
+  // Parse $options into $opts where the key is the option letter and the value is either '' or ':'.
   $opts = array();
   $len = strlen($options);
   $opt = null;
@@ -86,16 +91,18 @@ function gp_getopt($options, $longopts=array()) {
     $opts[$opt] = '';
   }
 
+  // Parse $longopts into $opts where the key is the option string and the value is either '' or ':'.
   $opt = null;
   foreach ($longopts as $opt) {
     if ($p = strpos($opt, ':')) {
-      $optv = substr($opt, $p);
+      $optval = substr($opt, $p);
       $opt = '--'.substr($opt, 0, $p);
     }
     else {
+      $optval = '';
       $opt = '--'.$opt;
     }
-    $opts[$opt] = $optv;
+    $opts[$opt] = $optval;
   }
 
   echo "options: $options\n";
@@ -109,6 +116,10 @@ function gp_getopt($options, $longopts=array()) {
   for ($i = 1; $i < $cnt; $i++) {
     $arg = $_SERVER['argv'][$i];
     echo "arg=$arg\n";
+    if ($arg == '--') {
+      $result['--'] = join(' ', array_slice($_SERVER['argv'], $i+1));
+      break;
+    }
     if (isset($opts[$arg])) {
       $result[preg_replace('/^--?/', '', $arg)] = '';
     }
