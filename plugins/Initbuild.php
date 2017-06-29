@@ -35,7 +35,7 @@ class Initbuild {
     }
 
     if (empty($path)) {
-      $path = gp()->cwd;
+      $path = dospath(trim(`pwd`));
     }
     $base_project = basename($path);
     //echo $path;
