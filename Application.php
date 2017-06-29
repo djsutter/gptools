@@ -9,7 +9,6 @@ class Application {
   public $config;                           // Configuration from appdata.json
   public $projects = array();               // List of Projects (objs) for this application
   public $root = null;                      // Root directory for this application
-  public $cwd = null;                       // Current working directory (where the program was started from)
   public $gitconfig = null;                 // Git config file for whatever project the user is in
   public $projectdir = null;                // Directory containing the project where the git config was found
   public $installation = null;              // Name of the installation, if any
@@ -31,8 +30,6 @@ class Application {
     $this->debug('Debug mode enabled.');
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
     $this->debug('gpdir='.$this->gpdir);
-    $this->cwd = dospath(trim(`pwd`));
-    $this->debug('cwd='.$this->cwd);
     $this->init_extensions();//start extensions early on so they can run pre_init and pre_run hooks.
   }
 
@@ -74,6 +71,8 @@ class Application {
   }
 
   function init() {
+    $this->debug('Application init()');
+
     // Get the application configuration
     if (! $this->_get_appconfig()) {
       exit_error("Cannot find build/config.json in your directory hierarchy.");
@@ -93,13 +92,14 @@ class Application {
     $netdrives = get_network_drives();
 
     // Get "my" drive from the current working directory
-    $mydrive = preg_replace('/:.*/', '', $this->cwd);
+    $cwd = dospath(trim(`pwd`));
+    $mydrive = preg_replace('/:.*/', '', $cwd);
 
     // If "my" drive is actually on the network, then see if we can determine the installation name.
     // Otherwise, treat this as a local installation.
     if (isset($netdrives[$mydrive]) && isset($this->config->installations)) {
       // Make a UNC version of the current working directory
-      $udir = preg_replace("/^$mydrive:/", $netdrives[$mydrive], $this->cwd);
+      $udir = preg_replace("/^$mydrive:/", $netdrives[$mydrive], $cwd);
 
       // Try to match the current location with a network drive, and determine the installation name from that.
       // This method iterates up through the directories until a match is found, or we're at the root.
@@ -196,7 +196,8 @@ class Application {
     $gp_config_paths = explode(':', $conf['gp_config_path']);
 
     // Search up through the directories, starting from the current working directory
-    $dir = $this->cwd;
+    $dir = dospath(trim(`pwd`));
+    $this->debug("CWD is $dir");
     while (1) {
       foreach ($gp_config_paths as $config_path) {
         $config_file = "$dir/$config_path";
@@ -229,7 +230,7 @@ class Application {
     }
 
     // Find the nearest git project
-    $path = $this->cwd;
+    $path = dospath(trim(`pwd`));
     while (1) {
       if (is_dir($path . '/.git')) {
         $this->gitconfig = parse_ini_file($path . '/.git/config', true);
