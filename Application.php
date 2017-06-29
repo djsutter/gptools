@@ -249,6 +249,21 @@ class Application {
     return $this->gitconfig;
   }
 
+
+  /**
+   * Get a list of projects, optionally filtered based on $options
+   * @param string $proj_name
+   * @return Project|null
+   */
+   public function get_project($proj_name) {
+    foreach ($this->projects as $project) {
+      if ($project->name == $proj_name) {
+        return $project;
+      }
+    }
+    return null;
+  }
+
   /**
    * Get a list of projects, optionally filtered based on $options
    */
