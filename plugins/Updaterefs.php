@@ -14,6 +14,7 @@ class Updaterefs {
   /**
    * Update the git refs in this application
    * @param array $args
+   * @return void
    */
   function run($args) {
     /*
@@ -37,13 +38,21 @@ class Updaterefs {
      * 4. Finally, git checkout the branch that was currently checked out.
      * Alternatively, just copy the files.
      */
-    print_r(gp()->config->refs);
-    if (!empty(gp()->config->refs)) {
-      foreach (gp()->config->refs as $proj_name => $refs) {
-        if ($project = gp()->get_project($proj_name)) {
-          pushd($project->get_dir());
-//          system('git branch');
-          popd();
+    if (empty(gp()->config->refs)) {
+      return;
+    }
+
+    foreach (gp()->config->refs as $proj_name => $refs) {
+      if ($project = gp()->get_project($proj_name)) {
+        $branches = $project->get_branches();
+        foreach ($refs as $ref => $branch) {
+          if (!in_array("$ref -> $branch", $branches)) {
+            if (!in_array($branch, $branches)) {
+              `git checkout $branch 2>1`;
+              `git checkout $project->cur_branch 2>1`;
+            }
+            `git symbolic-ref refs/heads/$ref refs/heads/$branch`;
+          }
         }
       }
     }
