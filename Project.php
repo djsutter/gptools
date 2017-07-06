@@ -40,6 +40,8 @@ class Project {
 
   /**
    * Get a list of branches for the current git project
+   * @param string $type
+   * @return array
    */
   function get_branches($type='') {
     if (empty($this->local_branches)) {
