@@ -249,7 +249,6 @@ class Application {
     return $this->gitconfig;
   }
 
-
   /**
    * Get a list of projects, optionally filtered based on $options
    * @param string $proj_name

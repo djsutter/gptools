@@ -85,4 +85,17 @@ class Project {
   function get_dir() {
     return $this->application->get_full_path($this->dir);
   }
+
+  function update_refs() {
+    $branches = $this->get_branches();
+    foreach ($refs as $ref => $branch) {
+      if (!in_array("$ref -> $branch", $branches)) {
+        if (!in_array($branch, $branches)) {
+          `git checkout $branch 2>1`;
+          `git checkout $this->cur_branch 2>1`;
+        }
+        `git symbolic-ref refs/heads/$ref refs/heads/$branch`;
+      }
+    }
+  }
 }
