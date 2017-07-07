@@ -44,18 +44,29 @@ class Project {
    * @return array
    */
   function get_branches($type='') {
+    gp()->debug('TRY get branches...');
     if (empty($this->local_branches)) {
+      gp()->debug('get branches...');
       pushd($this->get_dir());
       foreach (preg_split("/\r?\n/", rtrim(`git branch`)) as $branch) {
+        if ($branch == '') continue;
         if ($branch[0] == '*') {
           $this->cur_branch = substr($branch, 2);
         }
-        $this->local_branches[] = substr($branch, 2);
+        $branch = substr($branch, 2); // Remove leading spaces
+        // If branch is a symbolic ref, then remove the ref part. To us, it's as good as a local branch
+        if ($p = strpos($branch, ' -> ')) {
+          $branch = substr($branch, 0, $p);
+        }
+        $this->local_branches[] = $branch;
       }
       foreach (preg_split("/\r?\n/", rtrim(`git branch -r`)) as $branch) {
         $this->remote_branches[] = substr($branch, 2);
       }
       popd();
+    }
+    else {
+      gp()->debug('local branches: '.print_r($this->local_branches, true));
     }
 
     if ($type == 'r') {
@@ -72,9 +83,7 @@ class Project {
       return array_merge($this->local_branches, $this->remote_branches);
     }
     else {
-      if (!empty($this->local_branches)) {
-        return $this->local_branches;
-      }
+      return $this->local_branches;
     }
   }
 
@@ -87,15 +96,27 @@ class Project {
   }
 
   function update_refs() {
+    gp()->debug("update refs...");
+    $config = gp()->config;
+    if (empty($config->refs->{$this->name})) return;
     $branches = $this->get_branches();
-    foreach ($refs as $ref => $branch) {
+    foreach ($config->refs->{$this->name} as $ref => $branch) {
       if (!in_array("$ref -> $branch", $branches)) {
         if (!in_array($branch, $branches)) {
+          gp()->debug("git checkout $branch");
           `git checkout $branch 2>1`;
-          `git checkout $this->cur_branch 2>1`;
+          if ($this->cur_branch) {
+            gp()->debug("git checkout $this->cur_branch");
+            `git checkout $this->cur_branch 2>1`;
+          }
         }
         `git symbolic-ref refs/heads/$ref refs/heads/$branch`;
       }
     }
+
+    // Need to reset because now we have more branches
+    $this->local_branches = array();
+    $this->remote_branches = array();
+    $this->get_branches();
   }
 }

@@ -49,8 +49,8 @@ class Install {
     foreach (gp()->get_project_list() as $project) {
       $dir = $project->get_dir();
       if (is_dir("$dir/.git")) {
-          echo hl("Project '" . $project->name . "' already exists. Skipping...\n", 'red');
-          continue;
+        echo hl("Project '" . $project->name . "' already exists. Skipping...\n", 'red');
+        continue;
       }
 
       if (!is_dir($dir)) {
@@ -69,25 +69,15 @@ class Install {
       system($cmd);
 
       $project->update_refs();
-      //Lets get a list of the branches that are in the remote origin:
-      $cmd = 'git for-each-ref --sort=-committerdate refs/remotes/origin --format="%(refname)" | sed -n "s/refs\/remotes\/origin\///p"';
-      echo hl("$cmd\n", 'lightgreen');
-      $result = trim(`$cmd`);
-      $remote_branches_newest_descending = preg_split("/\r?\n/", $result);
-      if (isset($options['branch']) && in_array($options['branch'], $remote_branches_newest_descending)) {
+
+      $branches = $project->get_branches();
+
+      if (isset($options['branch']) && in_array($options['branch'], $project->get_branches())) {
         $cmd = 'git checkout ' . $options['branch'];
         echo hl("$cmd\n", 'lightgreen');
         system($cmd);
       }
-      else {
-        //$options['branch'] was not found in $remote_branches_newest_descending
-        $cmd = 'git checkout ' . $remote_branches_newest_descending[0];//grab the branch containing the most recent commit.
-        echo hl("$cmd\n", 'lightgreen');
-        system($cmd);
-      }
     }
-
-    //     system('php d:/git/gptools/gp.php --clone');
   }
 
   function help() {
