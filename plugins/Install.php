@@ -32,26 +32,50 @@ class Install {
       return;
     }
 
-    $buildprojdir = dirname($options['dir']);
-    if (!is_dir($buildprojdir)) {
-      mkdir($buildprojdir, 0777, true);
+    // If the installation directory does not exist, then create it
+    $installdir = dirname($options['dir']);
+    if (!is_dir($installdir)) {
+      mkdir($installdir, 0777, true);
     }
 
+    // Clone the git project into the installation directory
     system('git clone ' . $options['uri'] . ' ' . $options['dir']);
 
-    gp()->debug('chdir into ' . dospath($options['dir']));
+    // Checkout the requested branch
     chdir($options['dir']);
     if (isset($options['branch'])) {
       system('git checkout ' . $options['branch']);
     }
+
+    // Initialize gp, which reads in the config file
     gp()->init();
 
+    // Find the project that we just installed and see if it's in the right place.
+    // If not, then move it to where it's supposed to go.
     foreach (gp()->get_project_list() as $project) {
-      $dir = $project->get_dir();
+      if ($project->origin == $options['uri']) {
+        $projdir = $project->get_dir();
+        if ($projdir != dospath(trim(`pwd`))) {
+          // It needs to move - so get a list of files, create the directory and move the files in there.
+          $files = explode("\n", trim(`ls -a1`));
+          mkdir($projdir, 0777, true);
+          foreach ($files as $f) {
+            if ($f == '.' OR $f == '..') continue;
+            rename($f, "$projdir/$f");
+          }
+          // Now we need to re-initialize gp with the new config location
+          gp()->init();
+        }
+        break;
+      }
+    }
 
+    // Install the remaining projects as defined in the config
+    foreach (gp()->get_project_list() as $project) {
       // Skip over the build project - already got it!
       if ($project->origin == $options['uri']) continue;
 
+      $dir = $project->get_dir();
       if (is_dir("$dir/.git")) {
         echo hl("Project '" . $project->name . "' already exists. Skipping...\n", 'red');
         continue;
@@ -89,12 +113,11 @@ gp install function
 -------------------
 
 Use this to install a new application instance. Since all gp applications require a "build" project which contains
-a config.json, it is necessary to provide both the directory location and the git uri download the build project.
-The URI should specify the location of a git project which contains build information. NOTE that it will be cloned as "build"
+a config.json, it is necessary to provide both the install directory location and the git uri download the build project.
 
-Usage: gp --dir=</path/to/build> --uri=<http://path-to-git-build-project> --branch=<branch>
+Usage: gp --dir=</basedir> --uri=<http://path-to-git-build-project> --branch=<branch>
 
-Example: gp --dir=/d/myproject/build --uri=http://my.git.repo/myproject_build.git --branch=develop install
+Example: gp --dir=/d/myproject --uri=http://my.git.repo/myproject_build.git --branch=develop install
 ENDHELP;
   }
 }
