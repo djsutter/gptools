@@ -73,6 +73,8 @@ if (empty($args[1])) {
 // Note that it automatically terminates at '--'
 $options = getopt('h', array('help'));
 
+$app = new Application();
+
 // For now, there's only one help command
 if ((isset($options['h']) OR isset($options['help'])) && !$command) {
   show_help();
@@ -83,7 +85,6 @@ if (empty($args[1]) && !$command) {
   $command = 'list';
 }
 
-$app = new Application();
 $app->run($command, $cmdargs, $args);
 
 function gp() {
@@ -92,6 +93,12 @@ function gp() {
 }
 
 function show_help() {
+  $plugins = array();
+  foreach (array_keys(gp()->plugins) as $plugin) {
+    $plugins[] = strtolower($plugin);
+  }
+  $pluggers = '  ' . hl(join("\n  ", $plugins), 'lightblue');
+
   echo <<<ENDHELP
 GitProject - A program for managing applications built from multiple git sources.
 
@@ -99,11 +106,13 @@ usage: gp [options] <command>
 
 Built-in commands:
 
-TODO: Enumerate the plugins
-
 Global options: These are applicable to all (or most) commands
 --exclude=<comma separate list of project names>
 --include=<comma separate list of project names>
+
+Installed plugins (use gp --help <plugin> for more info):
+
+$pluggers
 
 Usage notes:
   1) Running a command with exclude. You need to do it like this:

@@ -31,6 +31,7 @@ class Application {
     $this->gpdir = dirname($_SERVER['PHP_SELF']);
     $this->debug('gpdir='.$this->gpdir);
     $this->init_extensions();//start extensions early on so they can run pre_init and pre_run hooks.
+    $this->init_plugins();
   }
 
   function debug($str) {
@@ -383,8 +384,6 @@ class Application {
     $this->run_args = $args;
 
     $this->_call_ext('pre_run');
-    $this->init_plugins();
-    $this->_call_ext('post_init_plugins');
 
     // Match the command with an alias, if exists
     if (isset($this->plugin_aliases[$command])) {
