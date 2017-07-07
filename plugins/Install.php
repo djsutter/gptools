@@ -48,6 +48,10 @@ class Install {
 
     foreach (gp()->get_project_list() as $project) {
       $dir = $project->get_dir();
+
+      // Skip over the build project - already got it!
+      if ($project->origin == $options['uri']) continue;
+
       if (is_dir("$dir/.git")) {
         echo hl("Project '" . $project->name . "' already exists. Skipping...\n", 'red');
         continue;
@@ -61,7 +65,7 @@ class Install {
       $cmd = 'git init';
       echo hl("$cmd\n", 'lightgreen');
       system($cmd);
-      $cmd = 'git remote add origin '.$project->origin;
+      $cmd = 'git remote add origin ' . $project->origin;
       echo hl("$cmd\n", 'lightgreen');
       system($cmd);
       $cmd = 'git fetch';
@@ -70,9 +74,7 @@ class Install {
 
       $project->update_refs();
 
-      $branches = $project->get_branches();
-
-      if (isset($options['branch']) && in_array($options['branch'], $project->get_branches())) {
+      if (isset($options['branch'])) {
         $cmd = 'git checkout ' . $options['branch'];
         echo hl("$cmd\n", 'lightgreen');
         system($cmd);
