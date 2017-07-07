@@ -22,16 +22,43 @@ class Install {
       $this->help();
       return;
     }
-
+    $uinput = '';
     if (empty($options['dir'])) {
-      echo "A required parameter is missing: --dir\n";
-      return;
+      $prompt = "A required parameter is missing: --dir\nPlease enter a full path destination directory for this installation :";
+      //readline is not available on WINNT
+      if (PHP_OS == 'WINNT') {
+        echo $prompt;
+        $fp = fopen("php://stdin","r");
+        $uinput = rtrim(fgets($fp, 1024));
+      } else {
+        $uinput = readline($prompt);
+      }
+      $options['dir'] = dospath($uinput);
     }
     if (empty($options['uri'])) {
-      echo "A required parameter is missing: --uri\n";
-      return;
+      $prompt = "A required parameter is missing: --uri\nPlease enter a git uri that contains your config.json ;\nex: http://gitlab.example.com/group/build.git :";
+      //readline is not available on WINNT
+      if (PHP_OS == 'WINNT') {
+        echo $prompt;
+        $fp = fopen("php://stdin","r");
+        $uinput = rtrim(fgets($fp, 1024));
+      } else {
+        $uinput = readline($prompt);
+      }
+      $options['uri'] = $uinput;
     }
-
+    if (empty($options['branch'])) {
+      $prompt = "A required parameter is missing: --branch\nPlease enter a branch to use for this installation;\nex: develop :";
+      //readline is not available on WINNT
+      if (PHP_OS == 'WINNT') {
+        echo $prompt;
+        $fp = fopen("php://stdin","r");
+        $uinput = rtrim(fgets($fp, 1024));
+      } else {
+        $uinput = readline($prompt);
+      }
+      $options['branch'] = $uinput;
+    }
     // If the installation directory does not exist, then create it
     $installdir = dirname($options['dir']);
     if (!is_dir($installdir)) {
