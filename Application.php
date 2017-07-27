@@ -194,6 +194,7 @@ class Application {
     }
 
     // Allow multiple paths separated by ':'
+    $this->debug("gp_config_path=" . $conf['gp_config_path']);
     $gp_config_paths = explode(':', $conf['gp_config_path']);
 
     // Search up through the directories, starting from the current working directory
@@ -203,6 +204,7 @@ class Application {
       foreach ($gp_config_paths as $config_path) {
         $config_file = "$dir/$config_path";
         if (is_readable($config_file)) {
+          $this->debug("Found application config at $config_file");
           $this->config = json_decode(file_get_contents($config_file));
           if (empty($this->config)) {
             echo hl("Cannot read $config_file - ".json_last_error_msg()."\n", 'red');
