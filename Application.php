@@ -1,6 +1,7 @@
 <?php
 
 require_once "Project.php";
+require_once "Project_ext.php";
 
 /**
  * Class to hold an application, which consists of git projects
@@ -8,6 +9,7 @@ require_once "Project.php";
 class Application {
   public $config;                           // Configuration from appdata.json
   public $projects = array();               // List of Projects (objs) for this application
+  public $projects_ext = array();           // List of external Projects (objs) for this application
   public $root = null;                      // Root directory for this application
   public $gitconfig = null;                 // Git config file for whatever project the user is in
   public $projectdir = null;                // Directory containing the project where the git config was found
@@ -78,6 +80,7 @@ class Application {
     if (! $this->_get_appconfig()) {
       exit_error("Cannot find build/config.json in your directory hierarchy.");
     }
+    $this->debug("Config_file processed.");
 
     // Get the nearest git config so that we can establish the current application
     if (! $this->_get_gitconfig()) {
@@ -87,6 +90,16 @@ class Application {
     // Create Project instances
     foreach ($this->config->git_projects as $name => $data) {
       $this->projects[] = new Project($this, $name, $data);
+    }
+
+    if (isset($this->config->git_projects_ext)) {
+      foreach ($this->config->git_projects_ext as $name => $data) {
+        $this->projects_ext[] = new Project_ext($this, $name, $data);
+      }
+      $this->debug('git_projects_ext is set.');
+    }
+    else {
+      $this->debug('git_projects_ext is not set.');
     }
 
     // Determine if we are running on a network drive. Start by getting a list of network drives
@@ -205,6 +218,7 @@ class Application {
         $config_file = "$dir/$config_path";
         if (is_readable($config_file)) {
           $this->debug("Found application config at $config_file");
+          $this->debug("Using config_file at $dir/$config_file");
           $this->config = json_decode(file_get_contents($config_file));
           if (empty($this->config)) {
             echo hl("Cannot read $config_file - ".json_last_error_msg()."\n", 'red');
@@ -306,7 +320,7 @@ class Application {
     $origin = preg_replace('://.*@:', '//', $origin);
     foreach ($this->projects as $project) {
       // Remove username if it exists
-      $project_orign = preg_replace('://.*@:', '//', $project->origin);
+      $project_orign = preg_replace('://.*@:', '//', $project->origin);//TODO, unused variable?
       if ($project->origin == $origin) {
         $dir = $project->dir;
         if (preg_match('/\[(.*)\]/', $dir, $matches)) {
