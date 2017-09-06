@@ -9,9 +9,15 @@ class Project_ext extends Project {
   public $local_version;
   public $patches = array();
   public $current_hash;
+  public $scope_internal = false;
+  public $scope_external = false;
+
   function __construct($application=null, $name=null, $data=null) {
     parent::__construct($application, $name, $data);
 
+    if (!$scope_internal) {
+      $scope_external = true;
+    }
     if ($data) {
       $this->version_or_hash = $data->version_or_hash;
       if (isset($data->patches)) {

@@ -9,6 +9,7 @@ class Project {
   public $desc;
   public $origin;
   public $dir;
+  public $scope_internal = TRUE; // This should be true by default for all internal projects.  Project_ext will need to set this to false;
   public $local_branches = array();
   public $remote_branches = array();
   public $cur_branch;
