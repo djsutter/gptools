@@ -148,7 +148,7 @@ class Application {
 
     // Now that we have found the installation config (or not), we can set the application root directory
     if (! $this->_get_root_dir()) {
-      exit_error("Cannot determine the application root directory.");
+      exit_error("Cannot determine the application root directory. Can try --root option.");
     }
   }
 
@@ -305,7 +305,17 @@ class Application {
    * Get the root directory for this application
    */
   private function _get_root_dir() {
-    $this->root = null;
+    // If already set, then return now
+    if ($this->root) {
+      return $this->root;
+    }
+
+    // Allow override with --root option
+    $optroot = getopt('', array('root:'));
+    if (isset($optroot['root'])) {
+      $this->root = $optroot['root'];
+      return $this->root;
+    }
 
     // If the installation has specified an approot, then use it as the application root directory and return
     if (isset($this->config->directories->approot)) {
@@ -316,6 +326,7 @@ class Application {
     // See if our git project matches one in the project config.
     // If so, then determine the application root directory based on the location of this project
     $origin = $this->gitconfig['remote origin']['url'];
+    $this->debug("Trying to determine app root using origin $origin");
     // Remove username if it exists
     $origin = preg_replace('://.*@:', '//', $origin);
     foreach ($this->projects as $project) {

@@ -110,6 +110,9 @@ Global options: These are applicable to all (or most) commands
 --exclude=<comma separate list of project names>
 --include=<comma separate list of project names>
 
+--debug
+--root=<project root>
+
 Installed plugins (use gp --help <plugin> for more info):
 
 $pluggers
