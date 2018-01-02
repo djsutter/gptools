@@ -148,7 +148,7 @@ class Application {
 
     // Now that we have found the installation config (or not), we can set the application root directory
     if (! $this->_get_root_dir()) {
-      exit_error("Cannot determine the application root directory. Can try --root option.");
+      exit_error("Cannot determine the application root directory.\nYour project origin was not found in the config.\nCan try --root option.");
     }
   }
 
