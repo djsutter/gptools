@@ -448,7 +448,7 @@ class Application {
 
       default:
         $cmd = empty($args[1]) ? join(' ', $args[0]) : join(' ', $args[1]);
-        require_once $this->gpdir . '/plugins/defaultcmd.php';
+        require_once $this->gpdir . '/plugins/Defaultcmd.php';
         $cmd_class = new Defaultcmd();
         $cmd_class->run($cmd);
     }
