@@ -330,8 +330,6 @@ class Application {
     // Remove username if it exists
     $origin = preg_replace('://.*@:', '//', $origin);
     foreach ($this->projects as $project) {
-      // Remove username if it exists
-      $project_orign = preg_replace('://.*@:', '//', $project->origin);//TODO, unused variable?
       if ($project->origin == $origin) {
         $dir = $project->dir;
         if (preg_match('/\[(.*)\]/', $dir, $matches)) {
@@ -342,6 +340,33 @@ class Application {
         $pdir = '\\/'.str_replace('/', '\\/', $dir);
         $this->root = preg_replace('/'.$pdir.'$/', '', $this->projectdir);
         break;
+      }
+    }
+
+    if (! $this->root) {
+      $orig_proj = null;
+      if ($p = strrpos($origin, '/')) {
+        $orig_proj = substr($origin, $p+1);
+      }
+      if ($orig_proj) {
+        $this->debug("Trying to determine app root just using a project name of $orig_proj");
+        foreach ($this->projects as $project) {
+          $proj = null;
+          if ($p = strrpos($project->origin, '/')) {
+            $proj = substr($project->origin, $p+1);
+          }
+          if ($proj == $orig_proj) {
+            $dir = $project->dir;
+            if (preg_match('/\[(.*)\]/', $dir, $matches)) {
+              if (isset($this->config->directories->{$matches[1]})) {
+                $dir = preg_replace('/\[.*\]/', $this->config->directories->{$matches[1]}, $dir);
+              }
+            }
+            $pdir = '\\/'.str_replace('/', '\\/', $dir);
+            $this->root = preg_replace('/'.$pdir.'$/', '', $this->projectdir);
+            break;
+          }
+        }
       }
     }
 
