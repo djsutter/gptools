@@ -24,7 +24,7 @@ class Install {
     }
     $uinput = '';
     if (empty($options['dir'])) {
-      $usage = "\nexample: gp --dir=/var/www/clients/client3/web47/web/drupal8/folder --uri=https://gitlab.com/GROUP/PROJECT/build.git install\n";
+      $usage = "\nexample: gp --dir=/var/www/clients/client3/web47/web/drupal8/pmweb/build --uri=https://gitlab.com/GROUP/PROJECT/build.git install\n";
       echo $usage;
       $prompt = "A required parameter is missing: --dir\nPlease enter a full path destination directory for this installation :";
       //readline is not available on WINNT
@@ -40,7 +40,7 @@ class Install {
       $options['dir'] = dospath($uinput);
     }
     if (empty($options['uri'])) {
-      $usage = "\nexample: gp --dir=/var/www/clients/client3/web47/web/drupal8/folder --uri=https://gitlab.com/GROUP/PROJECT/build.git install\n";
+      $usage = "\nexample: gp --dir=/var/www/clients/client3/web47/web/drupal8/pmweb/build --uri=https://gitlab.com/GROUP/PROJECT/build.git install\n";
       echo $usage;
       $prompt = "A required parameter is missing: --uri\nPlease enter a git uri that contains your config.json ;\nex: http://gitlab.example.com/group/build.git :";
       //readline is not available on WINNT
